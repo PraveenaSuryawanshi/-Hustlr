@@ -172,7 +172,7 @@ const Products = () => {
                   {product.variants?.length > 0 && (
                     <select
                     disabled={!product.inStock}
-                      className="btn btn-dark m-1"
+                      className="form-select m-1"
                       value={selectedVariant}
                       onChange={(e) => setSelectedVariant(e.target.value)}
                     >
