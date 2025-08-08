@@ -12,21 +12,48 @@ const Products = () => {
   const [data, setData] = useState([]);
   const [filter, setFilter] = useState(data);
   const [loading, setLoading] = useState(false);
+
+  const [selectedVariant, setSelectedVariant] = useState(
+    filter.variants?.[0] || ""
+  );
   let componentMounted = true;
 
   const dispatch = useDispatch();
 
   const addProduct = (product) => {
+    if (!product.inStock) return;
     dispatch(addCart(product));
   };
+  const variantOptions = [
+    ["Small", "Medium", "Large"],
+    ["Black", "White", "Red"],
+    ["Pack of 1", "Pack of 2", "Pack of 4"],
+  ];
+
 
   useEffect(() => {
+    let componentMounted = true;
     const getProducts = async () => {
       setLoading(true);
-      const response = await fetch("https://fakestoreapi.com/products/");
-      if (componentMounted) {
-        setData(await response.clone().json());
-        setFilter(await response.json());
+      try {
+        const response = await fetch("https://fakestoreapi.com/products/");
+        const products = await response.json();
+
+        if (componentMounted) {
+          const updatedProducts = products.map((p) => ({
+            ...p,
+            variants:
+              variantOptions[Math.floor(Math.random() * variantOptions.length)],
+            inStock: p.id % 3 !== 0
+          }));
+
+          setData(updatedProducts);
+          setFilter(updatedProducts);
+          setLoading(false);
+        }
+      }
+      catch (error) {
+        console.error("Error fetching products:", error);
         setLoading(false);
       }
 
@@ -72,6 +99,7 @@ const Products = () => {
   };
 
   const ShowProducts = () => {
+
     return (
       <>
         <div className="buttons text-center py-5">
@@ -135,14 +163,28 @@ const Products = () => {
                     <li className="list-group-item">Vestibulum at eros</li> */}
                 </ul>
                 <div className="card-body">
-                  <Link
+                  {/*  <Link
                     to={"/product/" + product.id}
                     className="btn btn-dark m-1"
                   >
                     Buy Now
-                  </Link>
+                  </Link> */}
+                  {product.variants?.length > 0 && (
+                    <select
+                      className="btn btn-dark m-1"
+                      value={selectedVariant}
+                      onChange={(e) => setSelectedVariant(e.target.value)}
+                    >
+                      {product.variants.map((variant, idx) => (
+                        <option key={idx} value={variant}>
+                          {variant}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <button
                     className="btn btn-dark m-1"
+                    disabled={!product.inStock}
                     onClick={() => {
                       toast.success("Added to cart");
                       addProduct(product);
